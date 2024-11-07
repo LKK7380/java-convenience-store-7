@@ -20,6 +20,7 @@ class ProductTest {
         assertThat(product).isNotNull();
         assertThat(product.getName()).isEqualTo(name);
         assertThat(product.getPrice()).isEqualTo(price);
+        assertThat(product.getQuantity()).isEqualTo(quantity);
     }
 
     @Test
@@ -28,5 +29,13 @@ class ProductTest {
         assertThatThrownBy(() -> new Product("콜라", 0, 10, "탄산2+1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[ERROR] 가격은 0 보다 커야 합니다.");
+    }
+
+    @Test
+    @DisplayName("상품 수량이 음수이면 예외가 발생한다")
+    void validateQuantity() {
+        assertThatThrownBy(() -> new Product("콜라", 1000, -1, "탄산2+1"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[ERROR] 수량은 0보다 작을 수 없습니다.");
     }
 }
