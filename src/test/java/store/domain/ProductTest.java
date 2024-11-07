@@ -66,4 +66,34 @@ class ProductTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[ERROR] 재고가 부족합니다.");
     }
+
+    @Test
+    @DisplayName("프로모션 재고를 설정한다")
+    void setPromotionQuantity() {
+        Product product = new Product("콜라", 1000, 10, "탄산2+1");
+        product.setPromotionQuantity(5);
+
+        assertThat(product.getPromotionQuantity()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("프로모션 재고를 감소시킨다")
+    void decreasePromotionQuantity() {
+        Product product = new Product("콜라", 1000, 10, "탄산2+1");
+        product.setPromotionQuantity(5);
+        product.decreasePromotionQuantity(3);
+
+        assertThat(product.getPromotionQuantity()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("프로모션 재고보다 많은 수량을 감소시키면 예외가 발생한다")
+    void validateDecreasePromotionQuantity() {
+        Product product = new Product("콜라", 1000, 10, "탄산2+1");
+        product.setPromotionQuantity(5);
+
+        assertThatThrownBy(() -> product.decreasePromotionQuantity(6))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[ERROR] 프로모션 재고가 부족합니다.");
+    }
 }

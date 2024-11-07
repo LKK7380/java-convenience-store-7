@@ -5,6 +5,7 @@ public class Product {
     private final int price;
     private int quantity;
     private final String promotionName;
+    private int promotionQuantity;
 
     public Product(String name, int price, int quantity, String promotionName) {
         validatePrice(price);
@@ -13,6 +14,7 @@ public class Product {
         this.price = price;
         this.quantity = quantity;
         this.promotionName = promotionName == null ? "" : promotionName;
+        this.promotionQuantity = 0;
     }
 
     private void validatePrice(int price) {
@@ -34,6 +36,18 @@ public class Product {
         this.quantity -= amount;
     }
 
+    public void setPromotionQuantity(int amount) {
+        validateQuantity(amount);
+        this.promotionQuantity = amount;
+    }
+
+    public void decreasePromotionQuantity(int amount) {
+        if (promotionQuantity < amount) {
+            throw new IllegalArgumentException("[ERROR] 프로모션 재고가 부족합니다.");
+        }
+        this.promotionQuantity -= amount;
+    }
+
     public String getName() {
         return name;
     }
@@ -48,5 +62,9 @@ public class Product {
 
     public String getPromotionName() {
         return promotionName;
+    }
+
+    public int getPromotionQuantity() {
+        return promotionQuantity;
     }
 }
