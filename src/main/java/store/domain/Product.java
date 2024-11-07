@@ -4,6 +4,7 @@ public class Product {
     private final String name;
     private final int price;
     private int quantity;
+    private final String promotionName;
 
     public Product(String name, int price, int quantity, String promotionName) {
         validatePrice(price);
@@ -11,6 +12,7 @@ public class Product {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
+        this.promotionName = promotionName == null ? "" : promotionName;
     }
 
     private void validatePrice(int price) {
@@ -35,5 +37,9 @@ public class Product {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public String getPromotionName() {
+        return promotionName;
     }
 }

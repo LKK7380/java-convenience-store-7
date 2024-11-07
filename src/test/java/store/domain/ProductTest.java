@@ -21,6 +21,7 @@ class ProductTest {
         assertThat(product.getName()).isEqualTo(name);
         assertThat(product.getPrice()).isEqualTo(price);
         assertThat(product.getQuantity()).isEqualTo(quantity);
+        assertThat(product.getPromotionName()).isEqualTo(promotionName);
     }
 
     @Test
@@ -37,5 +38,13 @@ class ProductTest {
         assertThatThrownBy(() -> new Product("콜라", 1000, -1, "탄산2+1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[ERROR] 수량은 0보다 작을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("프로모션명이 null이면 빈 문자열로 초기화한다")
+    void createProductWithNullPromotion() {
+        Product product = new Product("콜라", 1000, 10, null);
+
+        assertThat(product.getPromotionName()).isEmpty();
     }
 }
