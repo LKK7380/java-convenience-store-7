@@ -47,4 +47,23 @@ class ProductTest {
 
         assertThat(product.getPromotionName()).isEmpty();
     }
+
+    @Test
+    @DisplayName("재고를 감소시킨다")
+    void decreaseQuantity() {
+        Product product = new Product("콜라", 1000, 10, "탄산2+1");
+        product.decreaseQuantity(3);
+
+        assertThat(product.getQuantity()).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("재고보다 많은 수량을 감소시키면 예외가 발생한다")
+    void validateDecreaseQuantity() {
+        Product product = new Product("콜라", 1000, 10, "탄산2+1");
+
+        assertThatThrownBy(() -> product.decreaseQuantity(11))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("[ERROR] 재고가 부족합니다.");
+    }
 }

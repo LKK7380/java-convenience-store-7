@@ -27,6 +27,13 @@ public class Product {
         }
     }
 
+    public void decreaseQuantity(int amount) {
+        if (quantity < amount) {
+            throw new IllegalArgumentException("[ERROR] 재고가 부족합니다.");
+        }
+        this.quantity -= amount;
+    }
+
     public String getName() {
         return name;
     }
