@@ -6,6 +6,6 @@ import store.domain.Promotion;
 
 public class PromotionDiscount {
     public int calculate(Order order, Product product, Promotion promotion) {
-
+        return product.getPrice() * (order.getQuantity() / 3);
     }
 }
