@@ -1,7 +1,9 @@
-package store.domain;
+package store.service;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import store.domain.Order;
+import store.domain.Product;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
