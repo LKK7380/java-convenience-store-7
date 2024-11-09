@@ -1,5 +1,6 @@
 package store.domain;
 
+import store.domain.type.PromotionDiscountPolicy;
 import java.time.LocalDateTime;
 
 public class Promotion {
@@ -7,6 +8,7 @@ public class Promotion {
     private final LocalDateTime startDate;
     private final LocalDateTime endDate;
     private final int requiredQuantity;
+    private final PromotionDiscountPolicy policy;
 
     public Promotion(String name, LocalDateTime startDate, LocalDateTime endDate, int requiredQuantity) {
         validateName(name);
@@ -18,6 +20,7 @@ public class Promotion {
         this.startDate = startDate;
         this.endDate = endDate;
         this.requiredQuantity = requiredQuantity;
+        this.policy = PromotionDiscountPolicy.of(name);
     }
 
     private void validateDate(LocalDateTime startDate, LocalDateTime endDate) {
@@ -60,4 +63,19 @@ public class Promotion {
     public int getRequiredQuantity() {
         return requiredQuantity;
     }
+<<<<<<< HEAD
+=======
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public int calculateDiscountQuantity(int quantity) {
+        return policy.calculateDiscountQuantity(quantity);
+    }
+>>>>>>> dd7ec8c (feat: Promotion에 PromotionDiscountPolicy 적용 및 Promotion 테스트 코드 추가)
 }

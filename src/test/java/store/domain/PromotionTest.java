@@ -85,4 +85,14 @@ class PromotionTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("[ERROR] 종료일은 null일 수 없습니다.");
     }
+
+    @Test
+    @DisplayName("프로모션 정책에 따라 할인 수량을 계산한다")
+    void calculateDiscountQuantity() {
+        LocalDateTime startDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2024, 12, 31, 23, 59);
+        Promotion promotion = new Promotion("탄산2+1", startDate, endDate, 2);
+
+        assertThat(promotion.calculateDiscountQuantity(6)).isEqualTo(2);
+    }
 }
