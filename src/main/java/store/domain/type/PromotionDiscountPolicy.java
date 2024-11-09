@@ -1,6 +1,7 @@
 package store.domain.type;
 
-import java.util.Arrays;
+import store.domain.Promotion;
+import java.time.LocalDateTime;
 
 public enum PromotionDiscountPolicy {
     TWO_PLUS_ONE("탄산2+1", 2, 1),
@@ -25,8 +26,14 @@ public enum PromotionDiscountPolicy {
         return quantity / (buyQuantity + freeQuantity);
     }
 
+    public boolean isValidPeriod(Promotion promotion) {
+        LocalDateTime now = LocalDateTime.now();
+        return promotion.getStartDate().isBefore(now) &&
+                promotion.getEndDate().isAfter(now);
+    }
+
     public static PromotionDiscountPolicy of(String name) {
-        return Arrays.stream(values())
+        return java.util.Arrays.stream(values())
                 .filter(policy -> policy.name.equals(name))
                 .findFirst()
                 .orElse(NONE);
