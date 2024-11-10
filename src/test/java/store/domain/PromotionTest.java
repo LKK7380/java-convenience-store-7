@@ -93,6 +93,6 @@ class PromotionTest {
         LocalDateTime endDate = LocalDateTime.of(2024, 12, 31, 23, 59);
         Promotion promotion = new Promotion("탄산2+1", startDate, endDate, 2);
 
-        assertThat(promotion.calculateDiscountQuantity(6)).isEqualTo(2);
+        assertThat(promotion.getPolicy().calculateDiscountQuantity(6)).isEqualTo(2);
     }
 }

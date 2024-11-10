@@ -63,8 +63,6 @@ public class Promotion {
     public int getRequiredQuantity() {
         return requiredQuantity;
     }
-<<<<<<< HEAD
-=======
 
     public LocalDateTime getStartDate() {
         return startDate;
@@ -74,8 +72,7 @@ public class Promotion {
         return endDate;
     }
 
-    public int calculateDiscountQuantity(int quantity) {
-        return policy.calculateDiscountQuantity(quantity);
+    public PromotionDiscountPolicy getPolicy() {
+        return policy;
     }
->>>>>>> dd7ec8c (feat: Promotion에 PromotionDiscountPolicy 적용 및 Promotion 테스트 코드 추가)
 }
