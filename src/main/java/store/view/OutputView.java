@@ -1,8 +1,9 @@
 package store.view;
 
-import java.util.ArrayList;
 import store.domain.Product;
 import store.domain.Order;
+import store.domain.Receipt;
+
 import java.util.List;
 import java.util.Map;
 
@@ -13,8 +14,7 @@ public class OutputView {
     }
 
     public void printProducts(Map<String, Product> products) {
-        List<Product> sortedProducts = new ArrayList<>(products.values());
-        for (Product product : sortedProducts) {
+        for (Product product : products.values()) {
             printProduct(product);
         }
         System.out.println();
@@ -23,54 +23,46 @@ public class OutputView {
     private void printProduct(Product product) {
         String promotionInfo = product.getPromotionName() == null ? "" : " " + product.getPromotionName();
         if (product.getQuantity() == 0) {
-            System.out.printf("- %s %,d원 재고 없음%s%n",
+            System.out.printf("- %s %,d원 재고 없음%s\n",
                     product.getName(), product.getPrice(), promotionInfo);
             return;
         }
-        System.out.printf("- %s %,d원 %d개%s%n",
+        System.out.printf("- %s %,d원 %d개%s\n",
                 product.getName(), product.getPrice(), product.getQuantity(), promotionInfo);
     }
 
-    public void printReceipt(List<Order> orders, Map<String, Integer> orderPrices,
-                             Map<String, Integer> freeItems,
-                             int totalPrice, int promotionDiscount, int membershipDiscount) {
+    public void printReceipt(Receipt receipt) {
         System.out.println("==============W 편의점================");
         System.out.println("상품명\t\t수량\t금액");
 
-        int totalQuantity = printOrderDetails(orders, orderPrices);
+        for (Order order : receipt.getOrders()) {
+            System.out.printf("%s\t\t%d\t%,d\n",
+                    order.getProductName(),
+                    order.getQuantity(),
+                    receipt.getOrderPrices().get(order.getProductName()));
+        }
 
-        if (!freeItems.isEmpty()) {
+        if (!receipt.getFreeItems().isEmpty()) {
             System.out.println("=============증\t정===============");
-            printFreeItems(freeItems);
+            for (Map.Entry<String, Integer> entry : receipt.getFreeItems().entrySet()) {
+                System.out.printf("%s\t\t%d\n", entry.getKey(), entry.getValue());
+            }
         }
 
         System.out.println("====================================");
-        printPriceDetails(totalQuantity, totalPrice, promotionDiscount, membershipDiscount);
+        System.out.printf("총구매액\t\t%d\t%,d\n", receipt.getTotalQuantity(), receipt.getTotalPrice());
+        System.out.printf("행사할인\t\t\t-%,d\n", receipt.getPromotionDiscount());
+        System.out.printf("멤버십할인\t\t\t-%,d\n", receipt.getMembershipDiscount());
+        System.out.printf("내실돈\t\t\t%,d\n", receipt.getFinalPrice());
     }
 
-    private int printOrderDetails(List<Order> orders, Map<String, Integer> orderPrices) {
-        int totalQuantity = 0;
-        for (Order order : orders) {
-            System.out.printf("%s\t\t%d\t%,d%n",
-                    order.getProductName(),
-                    order.getQuantity(),
-                    orderPrices.get(order.getProductName()));
-            totalQuantity += order.getQuantity();
-        }
-        return totalQuantity;
+    public void printPromotionAddMessage(String productName) {
+        System.out.printf("현재 %s은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n",
+                productName);
     }
 
-    private void printFreeItems(Map<String, Integer> freeItems) {
-        for (Map.Entry<String, Integer> entry : freeItems.entrySet()) {
-            System.out.printf("%s\t\t%d%n", entry.getKey(), entry.getValue());
-        }
-    }
-
-    private void printPriceDetails(int totalQuantity, int totalPrice, int promotionDiscount, int membershipDiscount) {
-        System.out.printf("총구매액\t\t%d\t%,d%n", totalQuantity, totalPrice);
-        System.out.printf("행사할인\t\t\t-%,d%n", promotionDiscount);
-        System.out.printf("멤버십할인\t\t\t-%,d%n", membershipDiscount);
-        int finalPrice = totalPrice - promotionDiscount - membershipDiscount;
-        System.out.printf("내실돈\t\t\t%,d%n", finalPrice);
+    public void printPromotionInsufficientMessage(String productName, int quantity) {
+        System.out.printf("현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n",
+                productName, quantity);
     }
 }

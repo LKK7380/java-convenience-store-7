@@ -1,12 +1,7 @@
 package store.controller;
 
 import camp.nextstep.edu.missionutils.Console;
-import store.domain.Inventory;
-import store.domain.Order;
-import store.domain.Product;
-import store.domain.Promotion;
-import store.service.OrderCalculator;
-import store.service.discount.DiscountCalculator;
+import store.domain.*;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -18,80 +13,77 @@ import java.util.Map;
 public class StoreController {
     private final InputView inputView;
     private final OutputView outputView;
-    private final OrderCalculator orderCalculator;
-    private final DiscountCalculator discountCalculator;
     private final Inventory inventory;
 
     public StoreController(Inventory inventory) {
         this.inventory = inventory;
         this.inputView = new InputView();
         this.outputView = new OutputView();
-        this.orderCalculator = new OrderCalculator();
-        this.discountCalculator = new DiscountCalculator(orderCalculator);
     }
 
     public void run() {
-        do {
-            processOrder();
-        } while (askForContinueShopping());
+        outputView.printWelcomeMessage();
+        outputView.printProducts(inventory.getProducts());
+
+        while(true) {
+            try {
+                processOrder();
+                if (!askForContinueShopping()) {
+                    break;
+                }
+                outputView.printProducts(inventory.getProducts());
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
     private void processOrder() {
         Map<String, Integer> orderItems = getOrderInput();
+        validateOrderQuantities(orderItems);
         boolean hasMembership = getMembershipInput();
-        OrderResult orderResult = createOrderResult(orderItems, hasMembership);
-        processOrderResult(orderResult);
-    }
 
-    private OrderResult createOrderResult(Map<String, Integer> orderItems, boolean hasMembership) {
         List<Order> orders = new ArrayList<>();
+        Map<String, Integer> orderPrices = new HashMap<>();
         Map<String, Integer> freeItems = new HashMap<>();
         int totalPrice = 0;
         int promotionDiscount = 0;
-        int membershipDiscount = 0;
 
         for (Map.Entry<String, Integer> entry : orderItems.entrySet()) {
-            OrderItemResult itemResult = processOrderItem(entry, hasMembership);
-            orders.add(itemResult.order());
-            freeItems.putAll(itemResult.freeItems());
-            totalPrice += itemResult.price();
-            promotionDiscount += itemResult.promotionDiscount();
-            membershipDiscount += itemResult.membershipDiscount();
-        }
-
-        return new OrderResult(orders, freeItems, totalPrice, promotionDiscount, membershipDiscount);
-    }
-
-    private OrderItemResult processOrderItem(Map.Entry<String, Integer> entry, boolean hasMembership) {
-        Order order = new Order(entry.getKey(), entry.getValue());
-        Product product = inventory.getProducts().get(order.getProductName());
-        Promotion promotion = new Promotion(product.getPromotionName(), null, null, 2);
-
-        Map<String, Integer> freeItems = new HashMap<>();
-        int promotionDiscount = calculatePromotionDiscount(order, product, promotion, freeItems);
-        int price = discountCalculator.calculateFinalPrice(order, product, promotion, hasMembership);
-        int membershipDiscount = calculateMembershipDiscount(price, hasMembership);
-
-        inventory.decreaseStock(order.getProductName(), order.getQuantity());
-
-        return new OrderItemResult(order, freeItems, price, promotionDiscount, membershipDiscount);
-    }
-
-    private void processOrderResult(OrderResult orderResult) {
-        Map<String, Integer> orderPrices = new HashMap<>();
-        for (Order order : orderResult.orders()) {
+            Order order = new Order(entry.getKey(), entry.getValue());
             Product product = inventory.getProducts().get(order.getProductName());
-            orderPrices.put(order.getProductName(), product.getPrice() * order.getQuantity());
+
+            int orderPrice = calculateOrderPrice(product, order.getQuantity());
+            orders.add(order);
+            orderPrices.put(order.getProductName(), orderPrice);
+            totalPrice += orderPrice;
+
+            processPromotionItems(order, product, freeItems);
+            promotionDiscount = calculatePromotionDiscount(product, freeItems);
+
+            inventory.decreaseStock(order.getProductName(), order.getQuantity());
         }
 
-        outputView.printReceipt(
-                orderResult.orders(),
+        int membershipDiscount = calculateMembershipDiscount(totalPrice - promotionDiscount, hasMembership);
+
+        Receipt receipt = new Receipt(
+                orders,
                 orderPrices,
-                orderResult.freeItems(),
-                orderResult.totalPrice(),
-                orderResult.promotionDiscount(),
-                orderResult.membershipDiscount()
+                freeItems,
+                totalPrice,
+                promotionDiscount,
+                membershipDiscount
         );
+
+        outputView.printReceipt(receipt);
+    }
+
+    private void validateOrderQuantities(Map<String, Integer> orderItems) {
+        for (Map.Entry<String, Integer> entry : orderItems.entrySet()) {
+            if (!inventory.hasEnoughStock(entry.getKey(), entry.getValue())) {
+                throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+            }
+        }
     }
 
     private Map<String, Integer> getOrderInput() {
@@ -116,19 +108,33 @@ public class StoreController {
         }
     }
 
-    private int calculatePromotionDiscount(Order order, Product product, Promotion promotion, Map<String, Integer> freeItems) {
-        if (promotion != null && promotion.getPolicy().isValidPeriod(promotion)) {
-            int freeQuantity = promotion.getPolicy().calculateDiscountQuantity(order.getQuantity());
+    private int calculateOrderPrice(Product product, int quantity) {
+        return product.getPrice() * quantity;
+    }
+
+    private void processPromotionItems(Order order, Product product, Map<String, Integer> freeItems) {
+        if (product.getPromotionQuantity() > 0) {
+            int freeQuantity = order.getQuantity() / 3;
             if (freeQuantity > 0) {
-                freeItems.put(order.getProductName(), freeQuantity);
-                return freeQuantity * product.getPrice();
+                freeItems.put(product.getName(), freeQuantity);
             }
+        }
+    }
+
+    private int calculatePromotionDiscount(Product product, Map<String, Integer> freeItems) {
+        Integer freeQuantity = freeItems.get(product.getName());
+        if (freeQuantity != null) {
+            return product.getPrice() * freeQuantity;
         }
         return 0;
     }
 
     private int calculateMembershipDiscount(int price, boolean hasMembership) {
-        return hasMembership ? price * 30 / 100 : 0;
+        if (!hasMembership) {
+            return 0;
+        }
+        int discount = price * 30 / 100;
+        return Math.min(discount, 8000);
     }
 
     private boolean askForContinueShopping() {
@@ -142,19 +148,3 @@ public class StoreController {
         }
     }
 }
-
-record OrderResult(
-        List<Order> orders,
-        Map<String, Integer> freeItems,
-        int totalPrice,
-        int promotionDiscount,
-        int membershipDiscount
-) {}
-
-record OrderItemResult(
-        Order order,
-        Map<String, Integer> freeItems,
-        int price,
-        int promotionDiscount,
-        int membershipDiscount
-) {}

@@ -5,11 +5,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import store.domain.Order;
 import store.domain.Product;
+import store.domain.Receipt;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ class OutputViewTest {
     @Test
     @DisplayName("상품 목록 출력 테스트")
     void printProductsTest() {
-        Map<String, Product> products = new LinkedHashMap<>();
+        Map<String, Product> products = new HashMap<>();
         products.put("콜라", new Product("콜라", 1000, 10, "탄산2+1"));
         products.put("사이다", new Product("사이다", 1000, 8, "탄산2+1"));
         products.put("물", new Product("물", 500, 0, null));
@@ -58,7 +59,16 @@ class OutputViewTest {
         Map<String, Integer> freeItems = new HashMap<>();
         freeItems.put("콜라", 1);
 
-        outputView.printReceipt(orders, orderPrices, freeItems, 5000, 1000, 800);
+        Receipt receipt = new Receipt(
+                orders,
+                orderPrices,
+                freeItems,
+                5000,
+                1000,
+                800
+        );
+
+        outputView.printReceipt(receipt);
 
         String output = outputStream.toString();
         assertThat(output)
@@ -83,5 +93,15 @@ class OutputViewTest {
         assertThat(output)
                 .contains("안녕하세요. W편의점입니다.")
                 .contains("현재 보유하고 있는 상품입니다.");
+    }
+
+    @Test
+    @DisplayName("프로모션 메시지 출력 테스트")
+    void printPromotionMessageTest() {
+        outputView.printPromotionAddMessage("콜라");
+        String output = outputStream.toString();
+
+        assertThat(output)
+                .contains("현재 콜라은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)");
     }
 }
